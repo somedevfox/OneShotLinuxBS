@@ -20,6 +20,7 @@ puts "------------------------------------------------------------"
 
 # [ANCHOR] | Stage 1: Look for VirtualBox
 vboxpath = ""
+msys = false
 
 puts "Searching for Oracle VirtualBox Hypervisor in PATH..."
 if ENV["PATH"].size == 0
@@ -32,6 +33,10 @@ for el in patharray do
         puts "Searching for Oracle VirtualBox Hypervisor in PATH... \e[32mYes\e[0m [" + el +"]"
         vboxpath = el
         break
+    end
+
+    if el.include? "usr/bin"
+        msys = true
     end
 end
 
@@ -72,7 +77,11 @@ if !File.exists? iso_name
     puts "To download Canonical Ubuntu 20.10 ISO you will need 3 gigabytes on harddrive. Continue? [Default: yes]"
     confirm_prompt = gets.chomp
     if confirm_prompt == "yes" || confirm_prompt == "y" || confirm_prompt == ""
-        system("wget #{iso_url}")
+        if msys == true
+            system("wget #{iso_url}")
+        else 
+            system("wget #{iso_url} -UseBasicParsing")
+        end
     end
 end
 
