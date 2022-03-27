@@ -1,0 +1,51 @@
+# Check for root privileges
+
+if [[ $(id -u) != 0 ]]; then
+    echo "* This script is meant to be run as root. Do sudo sh oneshot_linux.sh"
+    exit
+fi
+
+cd ~
+
+echo "* Installing dependencies."
+sudo apt update
+sudo apt install ruby gcc make cmake bison m4 doxygen python3 python3-pip
+
+echo "* Installing conan."
+sudo pip install conan
+
+echo "* Configuring conan."
+conan
+
+echo "* Cloning ModShot."
+git clone {MODSHOT_URL} ModShot
+
+echo "* Cloning mod."
+git clone {OSMOD_URL} Mod
+
+echo "* Cloning zimberzimber's OneShot Mod Util."
+git clone https://github.com/zimberzimber/oneshot-mod-util
+
+echo "* Building ModShot - DRM-free."
+cd ModShot
+mkdir build
+cd build
+conan install .. --build=missing
+conan build ..
+mkdir ../../ModShotBuild
+mkdir ../../ModShotBuild/Steam
+mkdir ../../ModShotBuild/DRMFree
+cp bin/ ../../ModShotBuild/DRMFree
+
+echo "* Building ModShot - Steam version."
+rm -rf bin
+conan install .. --build=missing -o platform=steam
+conan build ..
+cp bin/ ../../ModShotBuild/Steam
+
+echo "* Preparing mod for release."
+cd ../../
+cd oneshot-mod-util
+ruby "main executor.rb" "../Mod"
+cd out
+tar cvf linux-oneshot-mod-release.tar.gz Steam itch
